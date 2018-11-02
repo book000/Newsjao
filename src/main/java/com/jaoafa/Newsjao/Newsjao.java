@@ -8,7 +8,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import com.jaoafa.Newsjao.Command.MainEvent;
 import com.jaoafa.Newsjao.Event.BotReadyEvent;
+import com.jaoafa.Newsjao.Event.MorningEvent;
+import com.jaoafa.Newsjao.Event.TrackNextNotFoundLeaveEvent;
+import com.jaoafa.Newsjao.Event.UserLeaveEvent;
 
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
@@ -16,6 +20,7 @@ import sx.blah.discord.api.events.EventDispatcher;
 import sx.blah.discord.util.DiscordException;
 
 public class Newsjao {
+	public static String newsapikey = null;
 	public static void main(String[] args) {
 		File f = new File("conf.properties");
 		Properties props;
@@ -30,6 +35,7 @@ public class Newsjao {
 			props = new Properties();
 			props.setProperty("token", "PLEASETOKEN");
 			props.setProperty("voicetext_apikey", "PLEASETOKEN");
+			props.setProperty("newsapikey", "PLEASETOKEN");
 			try {
 				props.store(new FileOutputStream("conf.properties"), "Comments");
 				System.out.println("Please Config Token!");
@@ -60,9 +66,19 @@ public class Newsjao {
 		}
 		System.setProperty("voicetext.apikey", voicetext_apikey);
 
+		newsapikey = props.getProperty("newsapikey");
+		if(newsapikey.equalsIgnoreCase("PLEASETOKEN")){
+			System.out.println("Please Token!");
+			return;
+		}
+
 		IDiscordClient client = createClient(token, true);
 		EventDispatcher dispatcher = client.getDispatcher();
 		dispatcher.registerListener(new BotReadyEvent());
+		dispatcher.registerListener(new MainEvent());
+		dispatcher.registerListener(new TrackNextNotFoundLeaveEvent());
+		dispatcher.registerListener(new MorningEvent());
+		dispatcher.registerListener(new UserLeaveEvent());
 	}
 	public static IDiscordClient createClient(String token, boolean login) { // Returns a new instance of the Discord client
 		ClientBuilder clientBuilder = new ClientBuilder(); // Creates the ClientBuilder instance
