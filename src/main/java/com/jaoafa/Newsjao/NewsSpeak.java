@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -45,7 +46,11 @@ public class NewsSpeak {
 		}
 
 		JSONObject json = getHttpsJson("https://newsapi.org/v2/top-headlines?country=jp&apiKey=" + Newsjao.newsapikey, null);
-		if(!json.getString("status").equalsIgnoreCase("ok")){
+		if(json == null){
+			AudioInputStream stream = EmotionalSpeaker.HARUKA.ready().happy().getResponse("ニュースを取得できませんでした。").audioInputStream();
+			audioP.queue(stream);
+			return;
+		}else if(!json.getString("status").equalsIgnoreCase("ok")){
 			AudioInputStream stream = EmotionalSpeaker.HARUKA.ready().happy().getResponse("ニュースを取得できませんでした。").audioInputStream();
 			audioP.queue(stream);
 			return;
@@ -87,6 +92,21 @@ public class NewsSpeak {
 
 			EmbedTextList.put(title, content);
 		});
+
+		List.add("続いて、本日の天気予報をお伝えします。");
+
+		String weather = getHttp("http://weather.livedoor.com/lite/", null);
+		Pattern pattern = Pattern.compile("<p class=\"gaikyo\">([\\s\\S]+?)<\\/p>");
+		Matcher matcher = pattern.matcher(weather);
+		if(matcher.find()){
+			String weatherText = matcher.group(1);
+			weatherText = weatherText.replaceAll(Matcher.quoteReplacement("<br />"), "。\n");
+			List.add(weatherText);
+
+			EmbedTextList.put("天気予報", weatherText);
+		}else{
+			List.add("天気予報の取得に失敗しました。");
+		}
 
 		for(String msg : List){
 			try {
@@ -194,6 +214,51 @@ public class NewsSpeak {
 			connect.disconnect();
 			JSONObject json = new JSONObject(builder.toString());
 			return json;
+		}catch(Exception e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+	protected static String getHttp(String address, Map<String, String> headers){
+		StringBuilder builder = new StringBuilder();
+		try{
+			URL url = new URL(address);
+
+			HttpURLConnection connect = (HttpURLConnection) url.openConnection();
+			connect.setRequestMethod("GET");
+			if(headers != null){
+				for(Map.Entry<String, String> header : headers.entrySet()) {
+					connect.setRequestProperty(header.getKey(), header.getValue());
+				}
+			}
+
+			connect.connect();
+
+			if(connect.getResponseCode() != HttpURLConnection.HTTP_OK){
+				InputStream in = connect.getErrorStream();
+
+				BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+				String line;
+				while ((line = reader.readLine()) != null) {
+					builder.append(line);
+				}
+				in.close();
+				connect.disconnect();
+
+				System.out.println("ConnectWARN: " + connect.getResponseMessage());
+				return null;
+			}
+
+			InputStream in = connect.getInputStream();
+
+			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				builder.append(line);
+			}
+			in.close();
+			connect.disconnect();
+			return builder.toString();
 		}catch(Exception e){
 			e.printStackTrace();
 			return null;
