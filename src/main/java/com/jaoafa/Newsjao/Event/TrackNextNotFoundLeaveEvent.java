@@ -21,5 +21,7 @@ public class TrackNextNotFoundLeaveEvent {
 		if(NewsSpeak.newsmessage != null && !NewsSpeak.newsmessage.isDeleted()){
 			NewsSpeak.newsmessage.delete();
 		}
+
+		MorningEvent.last = -1;
 	}
 }

@@ -8,10 +8,11 @@ import com.jaoafa.Newsjao.NewsSpeak;
 
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.guild.voice.user.UserVoiceChannelJoinEvent;
+import sx.blah.discord.util.audio.AudioPlayer;
 
 public class MorningEvent {
 	// 朝6時～9時にVC(General)に入るとニュースを流す
-	long last = -1;
+	public static long last = -1;
 	@EventSubscriber
 	public void onUserVoiceChannelJoinEvent(UserVoiceChannelJoinEvent event){
 		if(event.getUser().getLongID() == event.getClient().getOurUser().getLongID()){
@@ -31,6 +32,12 @@ public class MorningEvent {
 
 		if(!isPeriod(today6, today9)){
 			// 6時から9時の間ではない
+			return;
+		}
+
+		AudioPlayer audioP = AudioPlayer.getAudioPlayerForGuild(event.getGuild());
+		if(audioP.getPlaylistSize() != 0){
+			// 放送中？
 			return;
 		}
 
