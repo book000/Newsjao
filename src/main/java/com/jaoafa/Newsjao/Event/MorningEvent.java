@@ -46,7 +46,7 @@ public class MorningEvent {
 		}
 		last = event.getUser().getLongID();
 
-		NewsSpeak.speakNews(event.getClient(), event.getGuild().getChannelByID(189377932429492224L), event.getVoiceChannel(), true);
+		NewsSpeak.speakNews(event.getClient(), event.getGuild().getChannelByID(512242412635029514L), event.getVoiceChannel(), true);
 	}
 	/**
 	 * 指定された期間内かどうか
